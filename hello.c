@@ -1,12 +1,5 @@
-
-/*
-A simple "hello world" example.
-Set the screen background color and palette colors.
-Then write a message to the nametable.
-Finally, turn on the PPU to display video.
-*/
-
 #include "neslib.h"
+#include "Utils.h"
 
 // link the pattern table into CHR ROM
 //#link "chr_generic.s"
@@ -21,9 +14,11 @@ void main(void) {
   pal_col(3,0x30);	// white
 
   // write text to name table
-  vram_adr(NTADR_A(2,2));		// set address
-  vram_write("HELLO, WORLD!", 13);	// write bytes to video RAM
-
+  
+  Util_WriteTo((2,2), "This is", 7);
+  Util_WriteTo((2,3), "Jefferey Schlueter's", 20);
+  Util_WriteTo((2,4), "first NES game!", 15);
+    
   // enable PPU rendering (turn on screen)
   ppu_on_all();
 
