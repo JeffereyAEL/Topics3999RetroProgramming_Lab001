@@ -14,10 +14,12 @@ void main(void) {
   pal_col(3,0x30);	// white
 
   // write text to name table
-  
-  Util_WriteTo((2,2), "This is", 7);
-  Util_WriteTo((2,3), "Jefferey Schlueter's", 20);
-  Util_WriteTo((2,4), "first NES game!", 15);
+  vram_adr(NTADR_A(2, 2));
+  vram_write("This is", 7);
+  vram_adr(NTADR_A(2,3));
+  vram_write("Jefferey Schlueter's", 20);
+  vram_adr(NTADR_A(2,4));
+  vram_write("first NES game!", 15);
     
   // enable PPU rendering (turn on screen)
   ppu_on_all();
