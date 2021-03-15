@@ -1,15 +1,22 @@
 #include "neslib.h"
-#include "Utils.h"
 #include "vrambuf.h"
 //#link "vrambuf.c"
+// link the pattern table into CHR ROM
+//#link "chr_generic.s"
 
 #define NUM_ACTORS 1
 #define FLOOR_H 22
 #define VIS_SCREEN_x 31
 #define VIS_SCREEN_y 28
 #define BLOCK 32
-// link the pattern table into CHR ROM
-//#link "chr_generic.s"
+
+#define FLIPHORZ 0x40
+#define FLIPVERT 0x80
+
+#define SPR1 0x00
+#define SPR2 0x01
+#define SPR3 0x02
+#define SPR4 0x03
 
 // actor x/y coordinates
 byte actor_x[NUM_ACTORS];
@@ -33,11 +40,31 @@ const char PALETTE[32] =
   0x1d, 0x37, 0x2b, // sprite palette 3
 };
 
+void DrawSprite(byte x, byte y, char initSprite, char attrib, char* oam)
+{
+  if (attrib & FLIPHORZ)
+  {
+    *oam = oam_spr(x,   y, 	initSprite+2,     attrib, 	*oam);
+    *oam = oam_spr(x+8, y, 	initSprite,   attrib, 	*oam);
+    *oam = oam_spr(x,   y+8, 	initSprite+6,   attrib, 	*oam);
+    *oam = oam_spr(x+8, y+8, 	initSprite+4,   attrib, 	*oam);
+  }
+  else
+  {
+    *oam = oam_spr(x,   y, 	initSprite,     attrib, 	*oam);
+    *oam = oam_spr(x+8, y, 	initSprite+2,   attrib, 	*oam);
+    *oam = oam_spr(x,   y+8, 	initSprite+4,   attrib, 	*oam);
+    *oam = oam_spr(x+8, y+8, 	initSprite+6,   attrib, 	*oam);
+  }
+  
+}
+
 // main function, run after console reset
 void main(void) {
   char i; 	// sprite idex
   char x, y;	// world index
   char oam_id;	// sprite ID
+  char attrib;
   
   for (i=0;i<NUM_ACTORS;++i)
   {
@@ -84,26 +111,28 @@ void main(void) {
     oam_id = 0;
     for (i=0; i<NUM_ACTORS; ++i)
     {
-      if (actor_x > 0)
-      {
-        oam_id = oam_spr(actor_x[i], actor_y[i], 0xd9, 3, oam_id);
-        oam_id = oam_spr(actor_x[i]+8, actor_y[i], 0xdb, 3, oam_id);
-        oam_id = oam_spr(actor_x[i], actor_y[i]+8, 0xdd, 3, oam_id);
-        oam_id = oam_spr(actor_x[i]+8, actor_y[i]+8, 0xdf, 3, oam_id);
-      }
+      if (actor_dx[i] > 0)
+        attrib = SPR2;
       else
-      {
-        oam_id = oam_spr(actor_x[i], actor_y[i], 0xd9, 3, oam_id);
-        oam_id = oam_spr(actor_x[i]+8, actor_y[i], 0xdb, 3, oam_id);
-        oam_id = oam_spr(actor_x[i], actor_y[i]+8, 0xdd, 3, oam_id);
-        oam_id = oam_spr(actor_x[i]+8, actor_y[i]+8, 0xdf, 3, oam_id);
-      }
+        attrib = SPR2|FLIPHORZ;
+      DrawSprite(actor_x[i], actor_y[i], 0xd9, attrib, &oam_id);
       
       actor_y[i] += actor_dy[i];
       actor_x[i] += actor_dx[i];
       
-      //if (actor_x[i] > (VIS_SCREEN_y-1)*BLOCK || actor_x[i] < BLOCK)
-      //  actor_dx[i] *= -1;
+      if (actor_x[i] > 220)
+        vrambuf_put(NTADR_A(2,5), "ON THE DOOR", 11);
+      else
+        vrambuf_put(NTADR_A(2,5), "           ", 11);
+      
+      if (actor_x[i] > 226)
+      {
+        actor_dx[i] = -1;
+      }
+      else if (actor_x[i] < 8)
+      {
+        actor_dx[i] = 1;
+      }
     }
     
     if (oam_id!=0) oam_hide_rest(oam_id);
