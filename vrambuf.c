@@ -29,7 +29,7 @@ void vrambuf_flush(void) {
   vrambuf_clear();
 }
 
-// add multiple characters to update buffer
+// add multiple characters to update bufferhttps://8bitworkshop.com/v3.7.1/?repo=JeffereyAEL%2FTopics3999RetroProgramming_Lab001&platform=nes&file=RetroProgramming_JeffereySchlueter_NES_Game.c#
 // using horizontal increment
 void vrambuf_put(word addr, register const char* str, byte len) {
   // if bytes won't fit, wait for vsync and flush buffer

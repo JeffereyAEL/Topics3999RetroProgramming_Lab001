@@ -18,12 +18,16 @@
 #define SPR3 0x02
 #define SPR4 0x03
 
+#define FRAMES_PER_ANIM 9
+
 // actor x/y coordinates
 byte actor_x[NUM_ACTORS];
 byte actor_y[NUM_ACTORS];
 // actor x/y velocity
 sbyte actor_dx[NUM_ACTORS];
 sbyte actor_dy[NUM_ACTORS];
+// actor sprite frames
+byte actor_frame[NUM_ACTORS];
 
 // Steal Jason's perfectly nice palette
 /*{pal:"nes",layout:"nes"}*/ // <- thank-you, DemetriusR!
@@ -40,21 +44,23 @@ const char PALETTE[32] =
   0x1d, 0x37, 0x2b, // sprite palette 3
 };
 
-void DrawSprite(byte x, byte y, char initSprite, char attrib, char* oam)
+static unsigned long Frames = 1;
+
+void DrawSprite(byte x, byte y, char initSprite, char attrib, char* oam, char frame)
 {
   if (attrib & FLIPHORZ)
   {
-    *oam = oam_spr(x,   y, 	initSprite+2,     attrib, 	*oam);
-    *oam = oam_spr(x+8, y, 	initSprite,   attrib, 	*oam);
-    *oam = oam_spr(x,   y+8, 	initSprite+6,   attrib, 	*oam);
-    *oam = oam_spr(x+8, y+8, 	initSprite+4,   attrib, 	*oam);
+    *oam = oam_spr(x+8,     y, 	  initSprite+frame*4,     attrib, 	*oam);
+    *oam = oam_spr(x+8,     y+8,  initSprite+1+frame*4,   attrib, 	*oam);
+    *oam = oam_spr(x,       y, 	  initSprite+2+frame*4,   attrib, 	*oam);
+    *oam = oam_spr(x,       y+8,  initSprite+3+frame*4,   attrib, 	*oam);
   }
   else
   {
-    *oam = oam_spr(x,   y, 	initSprite,     attrib, 	*oam);
-    *oam = oam_spr(x+8, y, 	initSprite+2,   attrib, 	*oam);
-    *oam = oam_spr(x,   y+8, 	initSprite+4,   attrib, 	*oam);
-    *oam = oam_spr(x+8, y+8, 	initSprite+6,   attrib, 	*oam);
+    *oam = oam_spr(x,       y, 	  initSprite+frame*4,     attrib,       *oam);
+    *oam = oam_spr(x,       y+8,  initSprite+1+frame*4,   attrib,       *oam);
+    *oam = oam_spr(x+8,     y, 	  initSprite+2+frame*4,   attrib,       *oam);
+    *oam = oam_spr(x+8,     y+8,  initSprite+3+frame*4,   attrib,       *oam);
   }
   
 }
@@ -72,6 +78,7 @@ void main(void) {
     actor_x[i] = 0;
     actor_dy[i] = 0;
     actor_dx[i] = 1;
+    actor_frame[i] = 0;
   }
 
   // write text to name table
@@ -111,11 +118,10 @@ void main(void) {
     oam_id = 0;
     for (i=0; i<NUM_ACTORS; ++i)
     {
-      if (actor_dx[i] > 0)
-        attrib = SPR2;
-      else
-        attrib = SPR2|FLIPHORZ;
-      DrawSprite(actor_x[i], actor_y[i], 0xd9, attrib, &oam_id);
+      attrib = SPR2|FLIPHORZ * !(actor_dx[i] > 0);
+      actor_frame[i] = (actor_frame[i] + !(Frames % FRAMES_PER_ANIM) * 1) % 4;
+      
+      DrawSprite(actor_x[i], actor_y[i], 0xd8, attrib, &oam_id, actor_frame[i]);
       
       actor_y[i] += actor_dy[i];
       actor_x[i] += actor_dx[i];
@@ -125,7 +131,7 @@ void main(void) {
       else
         vrambuf_put(NTADR_A(2,5), "           ", 11);
       
-      if (actor_x[i] > 226)
+      if (actor_x[i] > 233)
       {
         actor_dx[i] = -1;
       }
@@ -138,5 +144,6 @@ void main(void) {
     if (oam_id!=0) oam_hide_rest(oam_id);
     
     vrambuf_flush();
+    Frames += 1;
   }
 }
