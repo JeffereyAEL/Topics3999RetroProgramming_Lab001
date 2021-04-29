@@ -28,15 +28,7 @@ void main(void) {
   vram_adr(NTADR_A(2,4));
   vram_write("first NES game!", 15);
 
-
   Background_Draw();
-  
-  //placing door
-  // FIND OUT HOW TO USE THE COMPLETE SPRITE AT ONCE
-  vram_adr(NTADR_A(VIS_SCREEN_x-2, FLOOR_H-2)); vram_put('\xc4');
-  vram_adr(NTADR_A(VIS_SCREEN_x-2, FLOOR_H-1)); vram_put('\xc5');
-  vram_adr(NTADR_A(VIS_SCREEN_x-1, FLOOR_H-2)); vram_put('\xc6');
-  vram_adr(NTADR_A(VIS_SCREEN_x-1, FLOOR_H-1)); vram_put('\xc7');
   
   Player_Init(&Ghostie);
   
